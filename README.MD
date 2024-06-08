@@ -1,50 +1,50 @@
 # FastAPI JWT Auth
 
-Этот проект - пример реализации аутентификации и авторизации с использованием FastAPI и JSON Web Tokens (JWT).
+This project is an example of implementing authentication and authorization using FastAPI and JSON Web Tokens (JWT).
 
-1. Клонируйте репозиторий на ваш локальный компьютер:
+1. Clone the repository to your local machine:
 
    ```bash
    git clone https://github.com/fastapi-jwt-auth.git
    ```
 
-## Установка с помощью Docker
+## Installation with Docker
 
-1. Соберите Docker-образ и запустите контейнеры:
+1. Build the Docker image and start the containers:
 
    ```bash
    docker-compose up --build
    ```
 
-### Использование
+### Usage
 
-После запуска контейнеров, сервер будет доступен по адресу `http://localhost:8000`.
+After starting the containers, the server will be available at `http://localhost:8000`.
 
-### Остановка
+### Stopping
 
-Для остановки контейнеров выполните:
+To stop the containers, run:
 
 ```bash
 docker-compose down
 ```
 
-## Установка Локальная
+## Local Installation
 
-Создайте виртуальное окружение и активируйте его
+Create a virtual environment and activate it
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-Выполните установку зависимостей с помощью poetry
+Install dependencies using poetry
 
 ```bash
 pip install poetry
 poetry install
 ```
 
-Создайте файл `.env` в корневом каталоге проекта с следующими переменными окружения:
+Create a `.env` file in the root directory of the project with the following environment variables:
 
    ```env
    POSTGRES_PASSWORD=
@@ -54,9 +54,9 @@ poetry install
    HOST=localhost
    ```
 
-### Генерация Пары ключей
+### Key Pair Generation
 
-Для создания ключей (приватного и публичного) в папке `certs` выполните следующие команды:
+To create keys (private and public) in the `certs` folder, run the following commands:
 
 ```bash
 mkdir certs
@@ -66,39 +66,38 @@ openssl genrsa -out certs/jwt-private.pem 2048
 openssl rsa -in certs/jwt-private.pem -outform PEM -pubout -out certs/jwt-public.pem
 ```
 
-### Выполните миграции Alembic для настройки базы данных:
+### Run Alembic Migrations to Set Up the Database:
 
 ```bash
 alembic upgrade head
 ```
 
-## Запуск
+## Running
 
-Для запуска проекта выполните следующую команду:
+To start the project, run the following command:
 
 ```bash
 python main.py
 ```
 
-Это запустит сервер FastAPI на `http://localhost:8000`.
+This will start the FastAPI server at `http://localhost:8000`.
 
-## Использование
+## Usage
 
-API предоставляет следующие эндпоинты:
+The API provides the following endpoints:
 
-- `/auth/register` - Регистрация нового пользователя.
-- `/auth/login` - Вход пользователя.
-- `/auth/me` - Получение информации о текущем пользователе.
-- `/auth/logout` - Выход текущего пользователя.
-- `/auth/refresh-token` - Обновление JWT токена.
+- `/auth/register` - Register a new user.
+- `/auth/login` - User login.
+- `/auth/me` - Get current user information.
+- `/auth/logout` - Logout the current user.
+- `/auth/refresh-token` - Refresh the JWT token.
 
-Для доступа к защищенным эндпоинтам (например, `/auth/me`) необходимо предоставить JWT токен в виде куки с именем
-access_token
+To access protected endpoints (e.g., `/auth/me`), you need to provide a JWT token as a cookie named `access_token`.
 
-## Вклад
+## Contribution
 
-Если у вас есть предложения по улучшению проекта, пожалуйста, создайте новый issue или pull request.
+If you have suggestions for improving the project, please create a new issue or pull request.
 
-## Лицензия
+## License
 
-Этот проект распространяется под лицензией MIT.
+This project is distributed under the MIT License.
