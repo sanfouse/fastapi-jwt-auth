@@ -11,24 +11,24 @@ router = APIRouter(prefix="/users", tags=["Users"])
 type user_service_type = ServiceABC[User, UserSchema, UserCreate]
 
 
-@router.get("/")
+@router.get("/", response_model=List[UserSchema])
 async def get_all(
     user: Annotated[user_service_type, Depends(user_service)]
-) -> List[UserSchema]:
-    return await user.all()  # pyright: ignore [reportReturnType]
+) -> List[User]:
+    return await user.all()
 
 
-@router.get("/{idx}")
+@router.get("/{idx}", response_model=UserSchema)
 async def get_one(
     idx: int, user: Annotated[user_service_type, Depends(user_service)]
-) -> UserSchema:
-    return await user.one(idx)  # pyright: ignore [reportReturnType]
+) -> User:
+    return await user.one(idx)
 
 
-@router.post("/create")
+@router.post("/create", response_model=UserSchema)
 async def create_one(
     create_schema: UserCreate, user: Annotated[user_service_type, Depends(user_service)]
-) -> UserSchema:
+) -> User:
     return await user.create(
         {"email": create_schema.email}, create_schema
-    )  # pyright: ignore [reportReturnType]
+    )

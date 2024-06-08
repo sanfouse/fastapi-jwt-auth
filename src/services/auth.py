@@ -1,11 +1,11 @@
 import datetime
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Type, Literal, Final
 
 from fastapi import HTTPException, status, Response, Request
 from jwt.exceptions import InvalidTokenError
 
-from src.auth.schemas import UserAuth, PayloadEncode, PayloadDecode
+from src.auth.schemas import UserAuth, Payload
 from src.repositories.base import RepositoryABC
 from src.users.models import User
 from src.users.schemas import UserSchema
@@ -18,9 +18,9 @@ class AuthValidatorABC(ABC):
     @staticmethod
     @abstractmethod
     async def validate_user_password(
-        validator: Type[HashPasswordABC],
-        schema: UserAuth,
-        repository: RepositoryABC[User, UserAuth],
+            validator: Type[HashPasswordABC],
+            schema: UserAuth,
+            repository: RepositoryABC[User, UserAuth],
     ) -> tuple[bool, User | None]:
         raise NotImplementedError
 
@@ -28,9 +28,9 @@ class AuthValidatorABC(ABC):
 class AuthValidator(AuthValidatorABC):
     @staticmethod
     async def validate_user_password(
-        validator: Type[HashPasswordABC],
-        schema: UserAuth,
-        repository: RepositoryABC[User, UserAuth],
+            validator: Type[HashPasswordABC],
+            schema: UserAuth,
+            repository: RepositoryABC[User, UserAuth],
     ) -> tuple[bool, User | None]:
         user: User | None = await repository.filter_by({"email": schema.email})
         if not user:
@@ -59,12 +59,13 @@ class AuthABC(ABC):
 
 
 class JWTAuthService(AuthABC, Service[User, UserSchema, UserAuth]):
-    COOKIE_ACCESS_TOKEN_KEY = "access_token"
+    COOKIE_ACCESS_TOKEN_KEY: Final = "access_token"
+    COOKIE_REFRESH_TOKEN_KEY: Final = "refresh_token"
 
     def __init__(
-        self,
-        repository: Type[RepositoryABC[User, UserAuth]],
-        validator: Type[HashPasswordABC],
+            self,
+            repository: Type[RepositoryABC[User, UserAuth]],
+            validator: Type[HashPasswordABC],
     ):
         super().__init__(User, repository)
         self.validator: Type[HashPasswordABC] = validator
@@ -81,28 +82,59 @@ class JWTAuthService(AuthABC, Service[User, UserSchema, UserAuth]):
         )
         if not is_success or not user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-        payload: dict = PayloadEncode(sub=user.id, email=schema.email).model_dump()
-        access_token = self.jwt.encode(payload)
+
+        access_token: str = self.jwt.create_access_token(user)
+        refresh_token: str = self.jwt.create_refresh_token(user)
+
         response.set_cookie(self.COOKIE_ACCESS_TOKEN_KEY, access_token, httponly=True)
+        response.set_cookie(self.COOKIE_REFRESH_TOKEN_KEY, refresh_token, httponly=True)
         return {"message": "Login successful"}
 
     async def authorized(self, request: Request) -> User | None:
-        access_token = request.cookies.get(self.COOKIE_ACCESS_TOKEN_KEY)
+        access_token: str | None = request.cookies.get(self.COOKIE_ACCESS_TOKEN_KEY)
         if not access_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-        try:
-            payload: PayloadDecode = PayloadDecode(**self.jwt.decode(access_token))
-        except InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-
-        if (
-            not payload.exp
-            or payload.exp < datetime.datetime.now(datetime.UTC).timestamp()
-        ):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        payload = self._verify_token(access_token, "access")
         return await self.repository.get_one_by_id(payload.sub)
 
     async def logout(self, response: Response) -> dict:
         response.delete_cookie(self.COOKIE_ACCESS_TOKEN_KEY)
+        response.delete_cookie(self.COOKIE_REFRESH_TOKEN_KEY)
         return {"message": "Logout successful"}
+
+    async def refresh_token(self, request: Request, response: Response) -> dict | None:
+        refresh_token: str | None = request.cookies.get(self.COOKIE_REFRESH_TOKEN_KEY)
+        if not refresh_token:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Refresh token not provided",
+            )
+        payload = self._verify_token(refresh_token, "refresh")
+        payload.token_type = "access"
+        new_access_token: str = self.jwt.create_access_token(old_payload=payload)
+        response.set_cookie(
+            self.COOKIE_ACCESS_TOKEN_KEY, new_access_token, httponly=True
+        )
+        return {"message": "Access token refreshed"}
+
+    def _verify_token(
+            self, token: str, token_type: Literal["access", "refresh"]
+    ) -> Payload:
+        try:
+            payload: Payload = Payload(**self.jwt.decode(token))
+        except InvalidTokenError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+            )
+
+        if (
+                not payload.exp
+                or payload.token_type != token_type
+                or payload.exp < datetime.datetime.now(datetime.UTC).timestamp()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Token expired or invalid"
+            )
+
+        return payload

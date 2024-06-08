@@ -6,10 +6,28 @@ services:
     container_name: db
     ports:
       - "5435:5432"
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_PASSWORD=1561
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
     volumes:
       - pg_data:/var/lib/postgresql/data
+
+  fastapi_jwt_auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_jwt_auth
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_PASSWORD=1561
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
+      - PORT=5432
+      - HOST=db
 
 volumes:
   pg_data:

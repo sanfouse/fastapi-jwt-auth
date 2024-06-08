@@ -1,4 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
+
+from typing import Literal
+
+from pydantic import BaseModel
 
 from src.users.schemas import UserCreate
 
@@ -7,11 +11,8 @@ class UserAuth(UserCreate):
     pass
 
 
-class PayloadEncode(BaseModel):
+class Payload(BaseModel):
     sub: int
-    email: EmailStr
-
-
-class PayloadDecode(PayloadEncode):
-    exp: int
-    iat: int
+    exp: float
+    iat: float
+    token_type: Literal["access", "refresh"]
