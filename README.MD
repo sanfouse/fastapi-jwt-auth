@@ -41,7 +41,7 @@ Install dependencies using poetry
 
 ```bash
 pip install poetry
-poetry install
+poetry install --no-root --no-dev
 ```
 
 Create a `.env` file in the root directory of the project with the following environment variables:
