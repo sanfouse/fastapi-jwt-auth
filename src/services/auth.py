@@ -18,9 +18,9 @@ class AuthValidatorABC(ABC):
     @staticmethod
     @abstractmethod
     async def validate_user_password(
-            validator: Type[HashPasswordABC],
-            schema: UserAuth,
-            repository: RepositoryABC[User, UserAuth],
+        validator: Type[HashPasswordABC],
+        schema: UserAuth,
+        repository: RepositoryABC[User, UserAuth],
     ) -> tuple[bool, User | None]:
         raise NotImplementedError
 
@@ -28,9 +28,9 @@ class AuthValidatorABC(ABC):
 class AuthValidator(AuthValidatorABC):
     @staticmethod
     async def validate_user_password(
-            validator: Type[HashPasswordABC],
-            schema: UserAuth,
-            repository: RepositoryABC[User, UserAuth],
+        validator: Type[HashPasswordABC],
+        schema: UserAuth,
+        repository: RepositoryABC[User, UserAuth],
     ) -> tuple[bool, User | None]:
         user: User | None = await repository.filter_by({"email": schema.email})
         if not user:
@@ -63,9 +63,9 @@ class JWTAuthService(AuthABC, Service[User, UserSchema, UserAuth]):
     COOKIE_REFRESH_TOKEN_KEY: Final = "refresh_token"
 
     def __init__(
-            self,
-            repository: Type[RepositoryABC[User, UserAuth]],
-            validator: Type[HashPasswordABC],
+        self,
+        repository: Type[RepositoryABC[User, UserAuth]],
+        validator: Type[HashPasswordABC],
     ):
         super().__init__(User, repository)
         self.validator: Type[HashPasswordABC] = validator
@@ -119,7 +119,7 @@ class JWTAuthService(AuthABC, Service[User, UserSchema, UserAuth]):
         return {"message": "Access token refreshed"}
 
     def _verify_token(
-            self, token: str, token_type: Literal["access", "refresh"]
+        self, token: str, token_type: Literal["access", "refresh"]
     ) -> Payload:
         try:
             payload: Payload = Payload(**self.jwt.decode(token))
@@ -129,9 +129,9 @@ class JWTAuthService(AuthABC, Service[User, UserSchema, UserAuth]):
             )
 
         if (
-                not payload.exp
-                or payload.token_type != token_type
-                or payload.exp < datetime.datetime.now(datetime.UTC).timestamp()
+            not payload.exp
+            or payload.token_type != token_type
+            or payload.exp < datetime.datetime.now(datetime.UTC).timestamp()
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Token expired or invalid"

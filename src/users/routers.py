@@ -29,6 +29,4 @@ async def get_one(
 async def create_one(
     create_schema: UserCreate, user: Annotated[user_service_type, Depends(user_service)]
 ) -> User:
-    return await user.create(
-        {"email": create_schema.email}, create_schema
-    )
+    return await user.create({"email": create_schema.email}, create_schema)
