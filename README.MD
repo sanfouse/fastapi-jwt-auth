@@ -94,6 +94,14 @@ The API provides the following endpoints:
 
 To access protected endpoints (e.g., `/auth/me`), you need to provide a JWT token as a cookie named `access_token`.
 
+## Tests
+
+Run tests
+
+```bash
+docker-compose -f docker-compose.test.yaml up 
+```
+
 ## Contribution
 
 If you have suggestions for improving the project, please create a new issue or pull request.

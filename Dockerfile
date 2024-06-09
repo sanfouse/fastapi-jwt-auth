@@ -13,13 +13,10 @@ RUN apt-get update && \
 
 RUN pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
-    poetry install --no-root --no-dev
+    poetry install --no-root
 
 RUN mkdir -p certs && \
     openssl genrsa -out certs/jwt-private.pem 2048 && \
-    openssl rsa -in certs/jwt-private.pem -outform PEM -pubout -out certs/jwt-public.pem && \
-    rm -rf /root/.cache && \
-    rm -rf /app/pyproject.toml /app/poetry.lock
+    openssl rsa -in certs/jwt-private.pem -outform PEM -pubout -out certs/jwt-public.pem
 
-CMD ["python", "main.py"]
 EXPOSE 8000

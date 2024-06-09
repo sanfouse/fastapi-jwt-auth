@@ -22,12 +22,26 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - migrations
     environment:
       - POSTGRES_PASSWORD=1561
       - POSTGRES_USER=postgres
       - POSTGRES_DB=auth
       - PORT=5432
       - HOST=db
+    command: [ "python", "main.py" ]
+
+  migrations:
+    build: .
+    container_name: migrations
+    environment:
+      - POSTGRES_PASSWORD=1561
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
+      - PORT=5432
+      - HOST=db
+    command: [ "alembic", "upgrade", "head" ]
+
 
 volumes:
   pg_data:
