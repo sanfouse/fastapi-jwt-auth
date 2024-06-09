@@ -32,16 +32,15 @@ class JWTToken:
 
     @classmethod
     def create_payload(
-        cls,
-        user: User,
-        token_type: Literal["access", "refresh"],
-        expire_timedelta: timedelta,
+            cls,
+            user: User,
+            token_type: Literal["access", "refresh"],
+            expire_timedelta: timedelta,
     ) -> Payload:
         iat = datetime.datetime.now(datetime.UTC)
         exp = iat + expire_timedelta
         return Payload(
             sub=user.id,
-            email=user.email,
             exp=exp.timestamp(),
             iat=iat.timestamp(),
             token_type=token_type,
@@ -49,7 +48,7 @@ class JWTToken:
 
     @classmethod
     def create_access_token(
-        cls, user: User | None = None, old_payload: Payload | None = None
+            cls, user: User | None = None, old_payload: Payload | None = None
     ) -> str:
         if user:
             payload = cls.create_payload(
